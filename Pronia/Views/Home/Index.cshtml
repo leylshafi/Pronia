@@ -334,7 +334,7 @@
                   aria-labelledby="latest-tab"
                 >
                   <div class="product-item-wrap row">
-                            @foreach (Product product in Model.Products.OrderBy(o=>o.CreatedTime))
+                            @foreach (Product product in Model.Products.OrderBy(o=>o.CreatedTime).Take(8))
                             {
                                 <div class="col-xl-3 col-md-4 col-sm-6">
                                     <div class="product-item">
