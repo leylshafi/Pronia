@@ -24,8 +24,14 @@ namespace Pronia.Controllers
             if (id <= 0) return BadRequest();
 
 
-            Product product = _context.Products.Include(p=>p.Category).FirstOrDefault(p => p.Id == id);
+            Product product = _context.Products
+                .Include(p=>p.ProductColors).ThenInclude(pc=>pc.Color)
+                .Include(p=>p.ProductSizes).ThenInclude(ps=>ps.Size)
+                .Include(p=>p.ProductImages)
+                .Include(p=>p.ProductTags).ThenInclude(pt=>pt.Tag)
+                .Include(p=>p.Category).FirstOrDefault(p => p.Id == id);
             List<Product> RelatedProducts = _context.Products.Include(p=>p.ProductImages).Where(p => p.CategoryId == product.CategoryId && p.Id!=product.Id).ToList();
+            Console.WriteLine(RelatedProducts.Count);
 
             DetailVM vm = new DetailVM()
             {
