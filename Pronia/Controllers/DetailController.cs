@@ -25,7 +25,7 @@ namespace Pronia.Controllers
 
 
             Product product = _context.Products.Include(p=>p.Category).FirstOrDefault(p => p.Id == id);
-            List<Product> RelatedProducts = _context.Products.Include(p=>p.ProductImages).Where(p => p.CategoryId == product.CategoryId).ToList();
+            List<Product> RelatedProducts = _context.Products.Include(p=>p.ProductImages).Where(p => p.CategoryId == product.CategoryId && p.Id!=product.Id).ToList();
 
             DetailVM vm = new DetailVM()
             {
