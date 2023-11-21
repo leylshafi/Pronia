@@ -15,10 +15,10 @@ namespace Pronia.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            List<Slide> Slides = _context.Slides.OrderBy(s => s.Order).ToList();
-            List<Product> Products = _context.Products.Include(p => p.ProductImages).ToList();
+            List<Slide> Slides = await _context.Slides.OrderBy(s => s.Order).ToListAsync();
+            List<Product> Products = await  _context.Products.Include(p => p.ProductImages).ToListAsync();
             Console.WriteLine(Products[0].ProductImages.Count);
 
             HomeViewModel vm = new()
