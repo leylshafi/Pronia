@@ -41,5 +41,43 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
+
+        public async Task<IActionResult> Update(int id)
+        {
+            if (id <= 0) return BadRequest();
+            Tag tag = await _context.Tags.FirstOrDefaultAsync(c => c.Id == id);
+            if (tag is null) return NotFound();
+
+            return View(tag);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Update(int id, Tag tag)
+        {
+            if (!ModelState.IsValid) return View();
+
+            Tag existed = await _context.Tags.FirstOrDefaultAsync(c => c.Id == id);
+            if (existed is null) return NotFound();
+            bool result = _context.Tags.Any(c => c.Name == tag.Name && c.Id != id);
+            if (result)
+            {
+                ModelState.AddModelError("Name", "There is already such tag");
+                return View();
+            }
+
+            existed.Name = tag.Name;
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    if (id <= 0) return BadRequest();
+        //    var existed = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
+        //    if (existed is null) return NotFound();
+        //    _context.Categories.Remove(existed);
+        //    await _context.SaveChangesAsync();
+        //    return RedirectToAction(nameof(Index));
+        //}
     }
 }
