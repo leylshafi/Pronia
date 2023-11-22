@@ -1,5 +1,4 @@
-﻿
-@model List<Category>
+﻿@model List<Slide>
 @{
     int count = 0;
 }
@@ -8,8 +7,8 @@
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Categories</h4>
-                    <a class="btn btn-success btn-info" asp-controller="Category" asp-action="Create">Create Category</a>
+                    <h4 class="card-title">Slides</h4>
+                    <a class="btn btn-success btn-info" asp-controller="Slide" asp-action="Create">Create Slide</a>
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
@@ -18,10 +17,13 @@
                                         No
                                     </th>
                                     <th>
-                                        Name
+                                        Image
                                     </th>
                                     <th>
-                                        Products Count
+                                        Title
+                                    </th>
+                                    <th>
+                                        Order
                                     </th>
                                     <th>
                                         Settings
@@ -29,29 +31,32 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (Category category in Model)
+                                @foreach (Slide slide in Model)
                                 {
                                     count++;
                                     <tr>
-                                        <td >
-                                           @count
+                                        <td>
+                                            @count
                                         </td>
                                         <td>
-                                           @category.Name
-                                        </td>
-                                       <td>
-                                           @category.Products.Count
+                                            <img style="width:150px; height:150px;" src="~/assets/images/website-images//@slide.ImageUrl" />
                                         </td>
                                         <td>
-                                            <a asp-action="Update" asp-route-id ="@category.Id" class="btn btn-warning btn-info"> <i class="mdi mdi-pencil"></i> Update</a>
-                                            <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-danger btn-info"> <i class="mdi mdi-delete"></i> Delete</a>
-                                            <a class="btn btn-primary btn-info"> <i class="mdi mdi-open-in-new"></i> Details</a>
+                                           @slide.Title
+                                        </td>
+                                        <td>
+                                            @slide.Order
+                                        </td>
+                                        <td>
+                                            <a asp-action="Update" asp-route-id="@slide.Id" class="btn btn-warning btn-info"> <i class="mdi mdi-pencil"></i> Update</a>
+                                            <a asp-action="Delete" asp-route-id="@slide.Id" class="btn btn-danger btn-info"> <i class="mdi mdi-delete"></i> Delete</a>
+                                            <a asp-action="Details" asp-route-id="@slide.Id" class="btn btn-primary btn-info"> <i class="mdi mdi-open-in-new"></i> Details</a>
                                         </td>
                                     </tr>
 
 
                                 }
-                                
+
                             </tbody>
                         </table>
                     </div>
@@ -60,3 +65,4 @@
         </div>
     </div>
 </div>
+
