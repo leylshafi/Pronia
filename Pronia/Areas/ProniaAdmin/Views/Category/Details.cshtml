@@ -1,0 +1,16 @@
+﻿@model Category
+<div class="container">
+	<h1>@Model.Name</h1>
+	<div class="d-flex flex-wrap">
+	@foreach (Product product in Model.Products)
+	{
+		<div class="card m-1" style="width: 18rem;">
+			<img src="~/assets/images/website-images/@product.ProductImages.FirstOrDefault(p=>p.IsPrimary==true).Url" class="card-img-top" alt="...">
+			<div class="card-body">
+				<h5 class="card-title">@product.Name</h5>
+				<p class="card-text">@product.Description</p>
+			</div>
+		</div>
+	}
+	</div>
+</div>

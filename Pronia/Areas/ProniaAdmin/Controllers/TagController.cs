@@ -70,14 +70,14 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        //public async Task<IActionResult> Delete(int id)
-        //{
-        //    if (id <= 0) return BadRequest();
-        //    var existed = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
-        //    if (existed is null) return NotFound();
-        //    _context.Categories.Remove(existed);
-        //    await _context.SaveChangesAsync();
-        //    return RedirectToAction(nameof(Index));
-        //}
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id <= 0) return BadRequest();
+            var existed = await _context.Tags.FirstOrDefaultAsync(c => c.Id == id);
+            if (existed is null) return NotFound();
+            _context.Tags.Remove(existed);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
