@@ -1,8 +1,12 @@
-﻿namespace Pronia.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Pronia.Models
 {
     public class Size
     {
         public int Id { get; set; }
+        [Required(ErrorMessage = "Name is required")]
+        [MaxLength(25, ErrorMessage = "Name's max length is 25")]
         public string Name { get; set; }
         public List<ProductSize>? ProductSizes { get; set; }
     }
