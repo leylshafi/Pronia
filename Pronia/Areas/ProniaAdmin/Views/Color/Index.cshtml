@@ -1,4 +1,4 @@
-﻿@model List<Tag>
+﻿@model List<Color>
 @{
     int count = 0;
 }
@@ -7,8 +7,8 @@
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Tags</h4>
-                    <a class="btn btn-success btn-info" asp-controller="Tag" asp-action="Create">Create Tag</a>
+                    <h4 class="card-title">Colors</h4>
+                    <a class="btn btn-success btn-info" asp-controller="Color" asp-action="Create">Create Color</a>
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
@@ -28,7 +28,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (Tag tag in Model)
+                                @foreach (Color color in Model)
                                 {
                                     count++;
                                     <tr>
@@ -36,21 +36,18 @@
                                             @count
                                         </td>
                                         <td>
-                                            @tag.Name
+                                            @color.Name
                                         </td>
                                         <td>
-                                            @tag.ProductTags.Count
+                                            @color.ProductColors.Count
                                         </td>
                                         <td>
-                                            <a asp-action="Update" asp-route-id="@tag.Id" class="btn btn-warning btn-info"> <i class="mdi mdi-pencil"></i> Update</a>
-                                            <a asp-action="Delete" asp-route-id="@tag.Id" class="btn btn-danger btn-info"> <i class="mdi mdi-delete"></i> Delete</a>
-                                            <a asp-action="Details" asp-route-id="@tag.Id" class="btn btn-primary btn-info"> <i class="mdi mdi-open-in-new"></i> Details</a>
+                                            <a asp-action="Update" asp-route-id="@color.Id" class="btn btn-warning btn-info"> <i class="mdi mdi-pencil"></i> Update</a>
+                                            <a asp-action="Delete" asp-route-id="@color.Id" class="btn btn-danger btn-info"> <i class="mdi mdi-delete"></i> Delete</a>
+                                            <a asp-action="Details" asp-route-id="@color.Id" class="btn btn-primary btn-info"> <i class="mdi mdi-open-in-new"></i> Details</a>
                                         </td>
                                     </tr>
-
-
                                 }
-
                             </tbody>
                         </table>
                     </div>

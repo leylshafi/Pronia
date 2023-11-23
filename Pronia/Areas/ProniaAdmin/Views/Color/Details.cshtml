@@ -1,0 +1,17 @@
+﻿@model Color
+<div class="container">
+	<h1 class="m-5">@Model.Name</h1>
+	<div class="d-flex flex-wrap">
+		@foreach (ProductColor pColor in Model.ProductColors)
+		{
+			<div class="card m-1" style="width: 18rem;">
+				<img src="~/assets/images/website-images/@pColor.Product.ProductImages.FirstOrDefault(p=>p.IsPrimary==true).Url" class="card-img-top" alt="...">
+				<div class="card-body">
+					<h5 class="card-title">@pColor.Product.Name</h5>
+					<p class="card-text">@pColor.Product.Description</p>
+				</div>
+			</div>
+		}
+	</div>
+</div>
+
