@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
 using Pronia.Models;
 
@@ -26,18 +27,22 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> Create(Category category)
+        public async Task<IActionResult> Create(CreateCategoryVM categoryVM)
         {
             if(!ModelState.IsValid)
             {
                 return View();
             }
-            bool result = _context.Categories.Any(c=>c.Name.ToLower().Trim() == category.Name.ToLower().Trim());
+            bool result = _context.Categories.Any(c=>c.Name.ToLower().Trim() == categoryVM.Name.ToLower().Trim());
             if(result)
             {
                 ModelState.AddModelError("Name", "This category already exists");
                 return View();
             }
+            var category = new Category { 
+                Name = categoryVM.Name,
+            };
+
             await _context.Categories.AddAsync(category);
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
@@ -49,24 +54,29 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             Category category = await _context.Categories.FirstOrDefaultAsync(c=>c.Id == id);
             if (category is null) return NotFound();
 
-            return View(category);
+            var vm = new UpdateCategoryVM
+            {
+                Name = category.Name,
+            };
+
+            return View(vm);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Update(int id, Category category)
+        public async Task<IActionResult> Update(int id, UpdateCategoryVM categoryvm)
         {
             if(!ModelState.IsValid) return View();
 
             Category existed = await _context.Categories.FirstOrDefaultAsync(c=>c.Id== id);
             if (existed is null) return NotFound();
-            bool result = _context.Categories.Any(c=>c.Name==category.Name && c.Id!=id);
+            bool result = _context.Categories.Any(c=>c.Name==categoryvm.Name && c.Id!=id);
             if(result)
             {
                 ModelState.AddModelError("Name", "There is already such category");
                 return View();
             }
 
-            existed.Name= category.Name;
+            existed.Name= categoryvm.Name;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
