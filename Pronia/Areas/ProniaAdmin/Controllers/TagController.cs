@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
 using Pronia.Models;
 
@@ -25,18 +26,22 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> Create(Tag tag)
+        public async Task<IActionResult> Create(CreateTagVM tagVM)
         {
             if (!ModelState.IsValid)
             {
                 return View();
             }
-            bool result = _context.Tags.Any(c => c.Name.ToLower().Trim() == tag.Name.ToLower().Trim());
+            bool result = _context.Tags.Any(c => c.Name.ToLower().Trim() == tagVM.Name.ToLower().Trim());
             if (result)
             {
                 ModelState.AddModelError("Name", "This tag already exists");
                 return View();
             }
+            var tag = new Tag
+            {
+                Name = tagVM.Name,
+            };
             await _context.Tags.AddAsync(tag);
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
@@ -47,25 +52,28 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             if (id <= 0) return BadRequest();
             Tag tag = await _context.Tags.FirstOrDefaultAsync(c => c.Id == id);
             if (tag is null) return NotFound();
+            var vm = new UpdateTagVM { 
+                Name = tag.Name,
+            };
 
-            return View(tag);
+            return View(vm);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Update(int id, Tag tag)
+        public async Task<IActionResult> Update(int id, UpdateTagVM tagVM)
         {
             if (!ModelState.IsValid) return View();
 
             Tag existed = await _context.Tags.FirstOrDefaultAsync(c => c.Id == id);
             if (existed is null) return NotFound();
-            bool result = _context.Tags.Any(c => c.Name == tag.Name && c.Id != id);
+            bool result = _context.Tags.Any(c => c.Name == tagVM.Name && c.Id != id);
             if (result)
             {
                 ModelState.AddModelError("Name", "There is already such tag");
                 return View();
             }
 
-            existed.Name = tag.Name;
+            existed.Name = tagVM.Name;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
