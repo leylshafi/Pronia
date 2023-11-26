@@ -77,5 +77,15 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 
 			return View(product);
 		}
+
+		public async Task<IActionResult> Delete(int id)
+		{
+			if (id <= 0) return BadRequest();
+			var existed = await _context.Products.FirstOrDefaultAsync(c => c.Id == id);
+			if (existed is null) return NotFound();
+			_context.Products.Remove(existed);
+			await _context.SaveChangesAsync();
+			return RedirectToAction(nameof(Index));
+		}
 	}
 }
