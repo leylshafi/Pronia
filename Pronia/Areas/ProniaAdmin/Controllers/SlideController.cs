@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NuGet.ProjectModel;
+using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
 using Pronia.Models;
 using Pronia.Utilities.Extentions;
@@ -29,27 +29,31 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			return View();
 		}
 		[HttpPost]
-		public async Task<IActionResult> Create(Slide slide)
+		public async Task<IActionResult> Create(CreateSlideVm slideVM)
 		{
-			if (slide.Photo is null)
-			{
-				ModelState.AddModelError("Photo", "Choose Photo");
-				return View();
-			}
-			if (!slide.Photo.ValidateType())
+			if(!ModelState.IsValid) return View();
+			if (!slideVM.Photo.ValidateType())
 			{
 				ModelState.AddModelError("Photo", "Wrong file type");
 				return View();
 			}
-			if (slide.Photo.ValidateSize(2 * 1024))
+			if (slideVM.Photo.ValidateSize(2 * 1024))
 			{
 				ModelState.AddModelError("Photo", "It shouldn't exceed 2 mb");
 				return View();
 			}
 
 
-			slide.ImageUrl = await slide.Photo.CreateFile(_env.WebRootPath, "assets", "images", "website-images");
+			string fileName = await slideVM.Photo.CreateFile(_env.WebRootPath, "assets", "images", "website-images");
 
+			Slide slide = new Slide()
+			{
+				ImageUrl = fileName,
+				Description = slideVM.Description,
+				Order = slideVM.Order,
+				Title = slideVM.Title,
+				Subtitle = slideVM.Subtitle
+			};
 
 			await _context.Slides.AddAsync(slide);
 			await _context.SaveChangesAsync();
@@ -83,40 +87,49 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			Slide slide = await _context.Slides.FirstOrDefaultAsync(c => c.Id == id);
 			if (slide is null) return NotFound();
 
-			return View(slide);
+			UpdateSlideVM vm = new UpdateSlideVM()
+			{
+				Subtitle = slide.Subtitle,
+				Title = slide.Title,
+				Description = slide.Description,
+				ImageUrl = slide.ImageUrl,
+				Order = slide.Order
+			};
+			return View(vm);
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Update(int id, Slide slide)
+		public async Task<IActionResult> Update(int id, UpdateSlideVM slidevm)
 		{
+			if (!ModelState.IsValid) return View(slidevm);
 			Slide existed = await _context.Slides.FirstOrDefaultAsync(c => c.Id == id);
 			if (existed is null) return NotFound();
-			if (!ModelState.IsValid) return View(existed);
-			bool result = _context.Slides.Any(c => c.Title == slide.Title && c.Order == slide.Order && c.Id != id);
+
+			bool result = _context.Slides.Any(c => c.Title == slidevm.Title && c.Order == slidevm.Order && c.Id != id);
 			if (!result)
 			{
-				if (slide.Photo is not null)
+				if (slidevm.Photo is not null)
 				{
-					if (!slide.Photo.ValidateType())
+					if (!slidevm.Photo.ValidateType())
 					{
 						ModelState.AddModelError("Photo", "Wrong file type");
-						return View(existed);
+						return View(slidevm);
 					}
-					if (slide.Photo.ValidateSize(2 * 1024))
+					if (slidevm.Photo.ValidateSize(2 * 1024))
 					{
 						ModelState.AddModelError("Photo", "It shouldn't exceed 2 mb");
-						return View(existed);
+						return View(slidevm);
 					}
-					string newImage = await slide.Photo.CreateFile(_env.WebRootPath, "assets", "images", "website-images");
+					string newImage = await slidevm.Photo.CreateFile(_env.WebRootPath, "assets", "images", "website-images");
 					existed.ImageUrl.DeleteFile(_env.WebRootPath, "assets", "images", "website-images");
 					existed.ImageUrl = newImage;
 
 				}
 
-				existed.Title = slide.Title;
-				existed.Description = slide.Description;
-				existed.Subtitle = slide.Subtitle;
-				existed.Order = slide.Order;
+				existed.Title = slidevm.Title;
+				existed.Description = slidevm.Description;
+				existed.Subtitle = slidevm.Subtitle;
+				existed.Order = slidevm.Order;
 				await _context.SaveChangesAsync();
 			}
 			else
