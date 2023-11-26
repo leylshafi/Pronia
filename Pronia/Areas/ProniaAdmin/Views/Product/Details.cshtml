@@ -1,0 +1,70 @@
+﻿@model Product
+<div class="m-5">
+	<div class="container">
+		<h1>@Model.Name</h1>
+		<div class="d-flex">
+			<div id="carouselExampleIndicators" class="carousel slide">
+				<div class="carousel-indicators">
+					<button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+					<button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+					<button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+				</div>
+				<div class="carousel-inner">
+					<div class="carousel-item active">
+						<img width="200px" src="~/assets/images/website-images/@Model.ProductImages.FirstOrDefault(p=>p.IsPrimary==true).Url">
+						
+					</div>
+					<div class="carousel-item">
+						<img width="200px" src="~/assets/images/website-images/@Model.ProductImages.FirstOrDefault(p=>p.IsPrimary==false).Url">
+					</div>
+				</div>
+				<button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+					<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+					<span class="visually-hidden">Previous</span>
+				</button>
+				<button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+					<span class="carousel-control-next-icon" aria-hidden="true"></span>
+					<span class="visually-hidden">Next</span>
+				</button>
+			</div>
+			
+			<div class="m-5">
+				<p>Price: @Model.Price</p>
+				<p>SKU: @Model.SKU</p>
+				<p>Category: @Model.Category.Name</p>
+				
+				<hr />
+				<h2>Description</h2>
+				<p>@Model.Description</p>
+			</div>
+		</div>
+		<div class="d-flex w-100 justify-content-around">
+			<div>
+				<h3>Tags</h3>
+				@foreach (ProductTag tag in Model.ProductTags)
+				{
+					<p>@tag.Tag.Name</p>
+				}
+			</div>
+			<div>
+				<h3>Sizes</h3>
+				@foreach (ProductSize size in Model.ProductSizes)
+				{
+					<p>@size.Size.Name</p>
+				}
+			</div>
+			<div>
+				<h3>Colors</h3>
+				@foreach (ProductColor color in Model.ProductColors)
+				{
+					<p>@color.Color.Name</p>
+				}
+			</div>
+		</div>
+		
+		
+		
+		
+	</div>
+</div>
+
