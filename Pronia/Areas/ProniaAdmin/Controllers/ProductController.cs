@@ -29,27 +29,33 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 
 		public async Task<IActionResult> Create()
 		{
-			ViewBag.Categories = await _context.Categories.ToListAsync();
-			ViewBag.Tags = await _context.Tags.ToListAsync();
+			var vm = new CreateProductVM
+			{
+				Categories = await _context.Categories.ToListAsync(),
+				Tags = await _context.Tags.ToListAsync(),
+				Colors = await _context.Colors.ToListAsync(),
+			};
 
-			return View();
+			return View(vm);
 		}
 		[HttpPost]
 		public async Task<IActionResult> Create(CreateProductVM productVM)
 		{
 			if (!ModelState.IsValid)
 			{
-                ViewBag.Categories = await _context.Categories.ToListAsync();
-				ViewBag.Tags = await _context.Tags.ToListAsync();
-				return View();
+				productVM.Categories = await _context.Categories.ToListAsync();
+				productVM.Tags = await _context.Tags.ToListAsync();
+				productVM.Colors = await _context.Colors.ToListAsync();
+				return View(productVM);
 			}
 			bool result = await _context.Categories.AnyAsync(c => c.Id == productVM.CategoryId);
 			if(!result) 
 			{
-                ViewBag.Categories = await _context.Categories.ToListAsync();
-				ViewBag.Tags = await _context.Tags.ToListAsync();
+				productVM.Categories = await _context.Categories.ToListAsync();
+				productVM.Tags = await _context.Tags.ToListAsync();
+				productVM.Colors = await _context.Colors.ToListAsync();
 				ModelState.AddModelError("CategoryId", "There is no such category");
-				return View();
+				return View(productVM);
 			}
 
 			foreach (int id in productVM.TagIds)
@@ -57,10 +63,23 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 				bool TagResult = await _context.Tags.AnyAsync(t => t.Id == id);
 				if (!TagResult)
 				{
-					ViewBag.Categories = await _context.Categories.ToListAsync();
-					ViewBag.Tags = await _context.Tags.ToListAsync();
+					productVM.Categories = await _context.Categories.ToListAsync();
+					productVM.Tags = await _context.Tags.ToListAsync();
+					productVM.Colors = await _context.Colors.ToListAsync();
 					ModelState.AddModelError("TagIds", "There is no such tag");
-					return View();
+					return View(productVM);
+				}
+			}
+			foreach (int id in productVM.ColorIds)
+			{
+				bool colorResult = await _context.Colors.AnyAsync(t => t.Id == id);
+				if (!colorResult)
+				{
+					productVM.Categories = await _context.Categories.ToListAsync();
+					productVM.Tags = await _context.Tags.ToListAsync();
+					productVM.Colors = await _context.Colors.ToListAsync();
+					ModelState.AddModelError("ColorIds", "There is no such color");
+					return View(productVM);
 				}
 			}
 			Product product = new Product
@@ -71,6 +90,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 				CategoryId = (int)productVM.CategoryId,
 				Description = productVM.Description,
 				ProductTags = new(),
+				ProductColors = new(),
 				ProductImages = new List<ProductImage>()
 				{
 					new ProductImage()
@@ -96,6 +116,15 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 					Product = product
 				};
 				product.ProductTags.Add(pTag);
+			}
+			foreach (int id in productVM.ColorIds)
+			{
+				var pColor = new ProductColor
+				{
+					ColorId = id,
+					Product = product
+				};
+				product.ProductColors.Add(pColor);
 			}
 
 			await _context.Products.AddAsync(product);
@@ -132,7 +161,10 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 		public async Task<IActionResult> Update(int id)
 		{
 			if(id<=0) return BadRequest();
-			var product = await _context.Products.Include(p=>p.ProductTags).FirstOrDefaultAsync(p => p.Id == id);
+			var product = await _context.Products
+				.Include(p=>p.ProductTags)
+				.Include(p=>p.ProductColors)
+				.FirstOrDefaultAsync(p => p.Id == id);
 			if (product == null) return NotFound();
 			var vm = new UpdateProductVM
 			{
@@ -142,8 +174,10 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 				SKU = product.SKU,
 				CategoryId = product.CategoryId,
 				TagIds = product.ProductTags.Select(pt=>pt.TagId).ToList(),
+				ColorIds = product.ProductColors.Select(pc=>pc.ColorId).ToList(),
 				Categories = await _context.Categories.ToListAsync(),
 				Tags= await _context.Tags.ToListAsync(),
+				Colors= await _context.Colors.ToListAsync(),
 			};
 			return View(vm);
 		}
@@ -154,17 +188,47 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			{
 				productVM.Categories= await _context.Categories.ToListAsync();
 				productVM.Tags = await _context.Tags.ToListAsync();
+				productVM.Colors = await _context.Colors.ToListAsync();
 				return View(productVM);
 			}
 
-			Product existed = await _context.Products.Include(p=>p.ProductTags).FirstOrDefaultAsync(c => c.Id == id);
+			Product existed = await _context.Products
+				.Include(p=>p.ProductTags)
+				.Include(p=>p.ProductColors)
+				.FirstOrDefaultAsync(c => c.Id == id);
 			if (existed is null) return NotFound();
 			bool result =await _context.Products.AnyAsync(c => c.CategoryId==productVM.CategoryId);
 			if (!result)
 			{
 				productVM.Categories = await _context.Categories.ToListAsync();
 				productVM.Tags = await _context.Tags.ToListAsync();
-				return View();
+				productVM.Colors = await _context.Colors.ToListAsync();
+				return View(productVM);
+			}
+
+			foreach (int idT in productVM.TagIds)
+			{
+				bool TagResult = await _context.Tags.AnyAsync(t => t.Id == idT);
+				if (!TagResult)
+				{
+					productVM.Categories = await _context.Categories.ToListAsync();
+					productVM.Tags = await _context.Tags.ToListAsync();
+					productVM.Colors = await _context.Colors.ToListAsync();
+					ModelState.AddModelError("TagIds", "There is no such tag");
+					return View(productVM);
+				}
+			}
+			foreach (int idC in productVM.ColorIds)
+			{
+				bool colorResult = await _context.Colors.AnyAsync(t => t.Id == idC);
+				if (!colorResult)
+				{
+					productVM.Categories = await _context.Categories.ToListAsync();
+					productVM.Tags = await _context.Tags.ToListAsync();
+					productVM.Colors = await _context.Colors.ToListAsync();
+					ModelState.AddModelError("ColorIds", "There is no such color");
+					return View(productVM);
+				}
 			}
 
 			result = _context.Products.Any(c => c.Name == productVM.Name && c.Id != id);
@@ -172,30 +236,23 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			{
 				productVM.Categories = await _context.Categories.ToListAsync();
 				productVM.Tags = await _context.Tags.ToListAsync();
+				productVM.Colors = await _context.Colors.ToListAsync();
 				ModelState.AddModelError("Name", "There is already such product");
 				return View(productVM);
 			}
 
-			foreach (ProductTag pTag in existed.ProductTags)
-			{
-				if (!productVM.TagIds.Exists(t => t == pTag.Id))
-				{
-					_context.ProductTags.Remove(pTag);
-				}
-			}
+			existed.ProductTags.RemoveAll(pTag => !productVM.TagIds.Contains(pTag.Id));
+			
+			existed.ProductTags.AddRange(productVM.TagIds.Where(tagId => !existed.ProductTags.Any(pt => pt.Id == tagId))
+								 .Select(tagId => new ProductTag { TagId = tagId }));
+
+			existed.ProductColors.RemoveAll(pColor => !productVM.ColorIds.Contains(pColor.Id));
+
+			existed.ProductColors.AddRange(productVM.ColorIds.Where(colorId => !existed.ProductColors.Any(pt => pt.Id == colorId))
+								 .Select(colorId => new ProductColor { ColorId = colorId }));
 
 			
-			foreach (int tagId in productVM.TagIds)
-			{
-				if (!existed.ProductTags.Any(pt => pt.Id == tagId))
-				{
-					existed.ProductTags.Add(
-						new()
-						{
-							TagId = tagId,
-						});
-				}
-			}
+
 
 
 			existed.Name = productVM.Name;
