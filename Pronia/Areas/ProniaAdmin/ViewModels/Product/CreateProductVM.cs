@@ -16,5 +16,7 @@ namespace Pronia.Areas.ProniaAdmin.ViewModels
         [Required]
         public int? CategoryId { get; set; }
 
+		public List<int> TagIds { get; set; }
+
     }
 }
