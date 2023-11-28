@@ -4,6 +4,7 @@ using NuGet.Packaging;
 using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
 using Pronia.Models;
+using Pronia.Utilities.Extentions;
 
 namespace Pronia.Areas.ProniaAdmin.Controllers
 {
@@ -11,10 +12,12 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 	public class ProductController : Controller
 	{
 		private readonly AppDbContext _context;
+		private readonly IWebHostEnvironment _env;
 
-		public ProductController(AppDbContext context)
+		public ProductController(AppDbContext context,IWebHostEnvironment env)
 		{
 			_context = context;
+			_env = env;
 		}
 
 		public async Task<IActionResult> Index()
@@ -98,6 +101,57 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 					return View(productVM);
 				}
 			}
+
+			if (!productVM.MainPhoto.ValidateType())
+			{
+				productVM.Categories = await _context.Categories.ToListAsync();
+				productVM.Tags = await _context.Tags.ToListAsync();
+				productVM.Colors = await _context.Colors.ToListAsync();
+				productVM.Sizes = await _context.Sizes.ToListAsync();
+				ModelState.AddModelError("MainPhoto", "Wrong file type");
+				return View(productVM);
+			}
+			if (!productVM.MainPhoto.ValidateSize(600))
+			{
+				productVM.Categories = await _context.Categories.ToListAsync();
+				productVM.Tags = await _context.Tags.ToListAsync();
+				productVM.Colors = await _context.Colors.ToListAsync();
+				productVM.Sizes = await _context.Sizes.ToListAsync();
+				ModelState.AddModelError("MainPhoto", "Wrong file size");
+				return View(productVM);
+			}
+			if (!productVM.HoverPhoto.ValidateType())
+			{
+				productVM.Categories = await _context.Categories.ToListAsync();
+				productVM.Tags = await _context.Tags.ToListAsync();
+				productVM.Colors = await _context.Colors.ToListAsync();
+				productVM.Sizes = await _context.Sizes.ToListAsync();
+				ModelState.AddModelError("HoverPhoto", "Wrong file type");
+				return View(productVM);
+			}
+			if (!productVM.HoverPhoto.ValidateSize(600))
+			{
+				productVM.Categories = await _context.Categories.ToListAsync();
+				productVM.Tags = await _context.Tags.ToListAsync();
+				productVM.Colors = await _context.Colors.ToListAsync();
+				productVM.Sizes = await _context.Sizes.ToListAsync();
+				ModelState.AddModelError("HoverPhoto", "Wrong file size");
+				return View(productVM);
+			}
+			ProductImage image = new ProductImage
+			{
+                Alternative = productVM.Name,
+                IsPrimary = true,
+				Url = await productVM.MainPhoto.CreateFile(_env.WebRootPath, "assets", "images", "website-images")
+			};
+			ProductImage hoverImage = new ProductImage
+			{
+                Alternative = productVM.Name,
+                IsPrimary = false,
+				Url = await productVM.MainPhoto.CreateFile(_env.WebRootPath, "assets", "images", "website-images")
+			};
+
+
 			Product product = new Product
 			{
 				Name = productVM.Name,
@@ -108,20 +162,9 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 				ProductTags = new(),
 				ProductColors = new(),
 				ProductSizes = new(),
-				ProductImages = new List<ProductImage>()
+				ProductImages = new()
 				{
-					new ProductImage()
-					{
-						IsPrimary = true,
-						Url = "1.jpg",
-						Alternative = "sdvfe"
-					},
-					new ProductImage()
-					{
-						IsPrimary = false,
-						Url = "1-1.jpg",
-						Alternative = "sdvfe"
-					},
+					image,hoverImage
 				}
 			};
 
@@ -151,6 +194,28 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 					Product = product
 				};
 				product.ProductSizes.Add(pSize);
+			}
+
+			TempData["Message"] = "";
+			foreach (IFormFile photo in productVM.Photos)
+			{
+				if (!photo.ValidateType())
+				{
+					TempData["Message"] += $"<p class=\"text-danger\">{photo.FileName} file type wrong</p>";
+					continue;
+				}
+				if (!photo.ValidateSize(600))
+				{
+					TempData["Message"] += $"<p class=\"text-danger\">{photo.FileName} file size wrong</p>";
+					continue;
+				}
+
+				product.ProductImages.Add(new ProductImage
+				{
+					Alternative = product.Name,
+					IsPrimary = null,
+					Url = await photo.CreateFile(_env.WebRootPath, "assets", "images", "website-images")
+				});
 			}
 
 			await _context.Products.AddAsync(product);
