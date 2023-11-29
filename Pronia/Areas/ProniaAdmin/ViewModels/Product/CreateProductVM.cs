@@ -16,7 +16,7 @@ namespace Pronia.Areas.ProniaAdmin.ViewModels
         public IFormFile MainPhoto { get; set; }
         public IFormFile HoverPhoto { get; set; }
 
-        public List<IFormFile> Photos { get; set; }
+        public List<IFormFile>? Photos { get; set; }
 
         [Required]
         public int? CategoryId { get; set; }
