@@ -47,7 +47,8 @@
     <div class="main-wrapper">
         <!-- Begin Main Header Area -->
         <header class="main-header-area">
-            <div class="header-top bg-pronia-primary d-none d-lg-block">
+            @await Component.InvokeAsync("Header")
+           @* <div class="header-top bg-pronia-primary d-none d-lg-block">
                 <div class="container">
                     <div class="row align-items-center">
                         <div class="col-6">
@@ -896,11 +897,13 @@
                     </div>
                 </div>
             </div>
-            <div class="global-overlay"></div>
+            <div class="global-overlay"></div>*@
         </header>
         <!-- Main Header Area End Here -->
         @RenderBody()
             <!-- Begin Footer Area -->
+
+            @*@await Component.InvokeAsync("Footer")*@ 
             <div class="footer-area"
                  data-bg-image="assets/images/footer/bg/1-1920x465.jpg">
                 <div class="footer-top section-space-top-100 pb-60">
