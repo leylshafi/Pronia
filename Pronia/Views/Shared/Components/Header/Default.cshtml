@@ -85,12 +85,22 @@
                                 </button>
                                 <ul class="dropdown-menu"
                                     aria-labelledby="settingButton">
+                                    @if (User.Identity.IsAuthenticated)
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" href="my-account.html">@User.Identity.Name</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-action="Logout" asp-controller="Account">Log out</a>
+                                        </li>
+                                    }
+                                    else
+                                    {
                                     <li>
-                                        <a class="dropdown-item" href="my-account.html">My account</a>
+                                        <a class="dropdown-item" asp-action="Register" asp-controller="Account">Login | Register</a>
                                     </li>
-                                    <li>
-                                        <a class="dropdown-item" href="login-register.html">Login | Register</a>
-                                    </li>
+                                    }
+                                    
                                 </ul>
                             </li>
                             <li class="d-none d-lg-block">
