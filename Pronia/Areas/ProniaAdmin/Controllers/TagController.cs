@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
 using Pronia.Models;
+using System.Data;
 
 namespace Pronia.Areas.ProniaAdmin.Controllers
 {
@@ -15,13 +17,14 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
         {
             _context = context;
         }
-
-        public async Task<IActionResult> Index()
+		[Authorize(Roles = "Admin,Moderator")]
+		public async Task<IActionResult> Index()
         {
             var Tags = await _context.Tags.Include(t=>t.ProductTags).ToListAsync();
             return View(Tags);
         }
-        public IActionResult Create()
+		[Authorize(Roles = "Admin,Moderator")]
+		public IActionResult Create()
         {
             return View();
         }
@@ -46,8 +49,8 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
-
-        public async Task<IActionResult> Update(int id)
+		[Authorize(Roles = "Admin,Moderator")]
+		public async Task<IActionResult> Update(int id)
         {
             if (id <= 0) return BadRequest();
             Tag tag = await _context.Tags.FirstOrDefaultAsync(c => c.Id == id);
@@ -77,8 +80,8 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
-        public async Task<IActionResult> Delete(int id)
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> Delete(int id)
         {
             if (id <= 0) return BadRequest();
             var existed = await _context.Tags.FirstOrDefaultAsync(c => c.Id == id);
@@ -87,7 +90,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Details(int id)
 		{
 			if (id <= 0) return BadRequest();

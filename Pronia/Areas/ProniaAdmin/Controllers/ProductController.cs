@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Packaging;
 using Pronia.Areas.ProniaAdmin.ViewModels;
@@ -19,7 +20,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			_context = context;
 			_env = env;
 		}
-
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Index()
 		{
 			List<Product> Products = await _context.Products
@@ -30,7 +31,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 
 			return View(Products);
 		}
-
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Create()
 		{
 			var vm = new CreateProductVM
@@ -223,7 +224,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 
 			return RedirectToAction(nameof(Index));
 		}
-
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Details(int id)
 		{
 			if (id <= 0) return BadRequest();
@@ -238,7 +239,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 
 			return View(product);
 		}
-
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> Delete(int id)
 		{
 			if (id <= 0) return BadRequest();
@@ -252,7 +253,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			await _context.SaveChangesAsync();
 			return RedirectToAction(nameof(Index));
 		}
-
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Update(int id)
 		{
 			if(id<=0) return BadRequest();

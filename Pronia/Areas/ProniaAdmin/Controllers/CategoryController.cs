@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
@@ -7,7 +8,7 @@ using Pronia.Models;
 namespace Pronia.Areas.ProniaAdmin.Controllers
 {
     [Area("ProniaAdmin")]
-    public class CategoryController : Controller
+	public class CategoryController : Controller
     {
         private readonly AppDbContext _context;
 
@@ -15,14 +16,14 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
         {
             _context = context;
         }
-
-        public async Task<IActionResult> Index()
+		[Authorize(Roles = "Admin,Moderator")]
+		public async Task<IActionResult> Index()
         {
             List<Category> Categories = await _context.Categories.Include(c=>c.Products).ToListAsync();
             return View(Categories);
         }
-
-        public IActionResult Create()
+		[Authorize(Roles = "Admin,Moderator")]
+		public IActionResult Create()
         {
             return View();
         }
@@ -47,8 +48,8 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
-
-        public async Task<IActionResult> Update(int id)
+		[Authorize(Roles = "Admin,Moderator")]
+		public async Task<IActionResult> Update(int id)
         {
             if (id <= 0) return BadRequest();
             Category category = await _context.Categories.FirstOrDefaultAsync(c=>c.Id == id);
@@ -80,8 +81,8 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
-        public async Task<IActionResult> Delete(int id)
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> Delete(int id)
         {
             if(id <= 0) return BadRequest();
             var existed = await _context.Categories.FirstOrDefaultAsync(c=> c.Id== id);
@@ -90,8 +91,8 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
-        public async Task<IActionResult> Details(int id)
+		[Authorize(Roles = "Admin,Moderator")]
+		public async Task<IActionResult> Details(int id)
         {
             if (id <= 0) return BadRequest();
             var category = await _context.Categories.Include(c=>c.Products).ThenInclude(p=>p.ProductImages).FirstOrDefaultAsync(s => s.Id == id);

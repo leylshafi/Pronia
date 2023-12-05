@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace Pronia.Areas.ProniaAdmin.Controllers
 {
     [Area("ProniaAdmin")]
     public class HomeController : Controller
     {
-        public IActionResult Index()
+		[Authorize(Roles = "Admin,Moderator")]
+		public IActionResult Index()
         {
             return View();
         }

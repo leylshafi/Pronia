@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
 using Pronia.Models;
 using Pronia.Utilities.Extentions;
+using System.Data;
 
 namespace Pronia.Areas.ProniaAdmin.Controllers
 {
@@ -18,12 +20,13 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			_context = context;
 			_env = env;
 		}
-
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Index()
 		{
 			var slides = await _context.Slides.ToListAsync();
 			return View(slides);
 		}
+		[Authorize(Roles = "Admin,Moderator")]
 		public IActionResult Create()
 		{
 			return View();
@@ -59,7 +62,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			await _context.SaveChangesAsync();
 			return RedirectToAction(nameof(Index));
 		}
-
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Details(int id)
 		{
 			if (id <= 0) return BadRequest();
@@ -68,7 +71,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 
 			return View(slide);
 		}
-
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> Delete(int id)
 		{
 			if (id <= 0) return BadRequest();
@@ -80,7 +83,7 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			await _context.SaveChangesAsync();
 			return RedirectToAction(nameof(Index));
 		}
-
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Update(int id)
 		{
 			if (id <= 0) return BadRequest();

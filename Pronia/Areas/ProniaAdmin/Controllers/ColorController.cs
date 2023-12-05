@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
 using Pronia.Models;
+using System.Data;
 
 namespace Pronia.Areas.ProniaAdmin.Controllers
 {
@@ -12,16 +14,17 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 		private readonly AppDbContext _context;
 
 		public ColorController(AppDbContext context)
-		{
+        {
 			_context = context;
 		}
+		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Index()
 		{
 			var colors = await _context.Colors.Include(c=>c.ProductColors).ToListAsync();
 			return View(colors);
 		}
-
-        public IActionResult Create()
+		[Authorize(Roles = "Admin,Moderator")]
+		public IActionResult Create()
         {
             return View();
         }
@@ -46,8 +49,8 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
-
-        public async Task<IActionResult> Update(int id)
+		[Authorize(Roles = "Admin,Moderator")]
+		public async Task<IActionResult> Update(int id)
         {
             if (id <= 0) return BadRequest();
             Color color = await _context.Colors.FirstOrDefaultAsync(c => c.Id == id);
@@ -77,8 +80,8 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
-        public async Task<IActionResult> Delete(int id)
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> Delete(int id)
         {
             if (id <= 0) return BadRequest();
             var existed = await _context.Colors.FirstOrDefaultAsync(c => c.Id == id);
@@ -87,8 +90,8 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
-        public async Task<IActionResult> Details(int id)
+		[Authorize(Roles = "Admin,Moderator")]
+		public async Task<IActionResult> Details(int id)
         {
             if (id <= 0) return BadRequest();
             var color = await _context.Colors
