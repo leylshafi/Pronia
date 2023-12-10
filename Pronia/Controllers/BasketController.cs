@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Pronia.DAL;
+using Pronia.Interfaces;
 using Pronia.Models;
 using Pronia.ViewModels;
 using System.Security.Claims;
@@ -13,11 +14,12 @@ namespace Pronia.Controllers
 	{
 		private readonly AppDbContext _context;
 		private readonly UserManager<AppUser> _userManager;
-
-		public BasketController(AppDbContext context, UserManager<AppUser> userManager)
+		private readonly IEmailService _emailService;
+		public BasketController(AppDbContext context, UserManager<AppUser> userManager, IEmailService emailService)
 		{
 			_context = context;
 			_userManager = userManager;
+			_emailService = emailService;
 		}
 
 		public async Task<IActionResult> Index()
@@ -25,7 +27,7 @@ namespace Pronia.Controllers
 			List<BasketItemVM> basketVM = new();
 			if (User.Identity.IsAuthenticated)
 			{
-				AppUser user = await _userManager.Users.Include(u => u.BasketItems).ThenInclude(bi => bi.Product).ThenInclude(p => p.ProductImages.Where(pi => pi.IsPrimary == true)).FirstOrDefaultAsync(u => u.Id == User.FindFirstValue(ClaimTypes.NameIdentifier));
+				AppUser user = await _userManager.Users.Include(u => u.BasketItems.Where(bi=>bi.OrderId==null)).ThenInclude(bi => bi.Product).ThenInclude(p => p.ProductImages.Where(pi => pi.IsPrimary == true)).FirstOrDefaultAsync(u => u.Id == User.FindFirstValue(ClaimTypes.NameIdentifier));
 				foreach (BasketItem item in user.BasketItems)
 				{
 					basketVM.Add(new BasketItemVM()
@@ -35,7 +37,7 @@ namespace Pronia.Controllers
 						Count = item.Count,
 						SubTotal = item.Count * item.Product.Price,
 						Image = item.Product.ProductImages.FirstOrDefault().Url,
-						Id = item.Product.Id
+						Id = item.Product.Id,
 					});
 				}
 			}
@@ -78,7 +80,7 @@ namespace Pronia.Controllers
 
 			if (User.Identity.IsAuthenticated)
 			{
-				AppUser user = await _userManager.Users.Include(u => u.BasketItems).FirstOrDefaultAsync(u => u.Id == User.FindFirst(ClaimTypes.NameIdentifier).Value);
+				AppUser user = await _userManager.Users.Include(u => u.BasketItems.Where(bi => bi.OrderId == null)).FirstOrDefaultAsync(u => u.Id == User.FindFirst(ClaimTypes.NameIdentifier).Value);
 				if (user is null) return NotFound();
 				var basketItem = user.BasketItems.FirstOrDefault(bi => bi.ProductId == id);
 				if (basketItem is null)
@@ -89,6 +91,7 @@ namespace Pronia.Controllers
 						ProductId = product.Id,
 						Price = product.Price,
 						Count = 1,
+						OrderId = null
 					};
 					user.BasketItems.Add(basketItem);
 				}
@@ -147,7 +150,7 @@ namespace Pronia.Controllers
 			List<BasketCookieItemVM> basket;
 			if (User.Identity.IsAuthenticated)
 			{
-				AppUser user = await _userManager.Users.Include(u => u.BasketItems).FirstOrDefaultAsync(u => u.Id == User.FindFirst(ClaimTypes.NameIdentifier).Value);
+				AppUser user = await _userManager.Users.Include(u => u.BasketItems.Where(bi => bi.OrderId == null)).FirstOrDefaultAsync(u => u.Id == User.FindFirst(ClaimTypes.NameIdentifier).Value);
 				if (user is null) return NotFound();
 				var basketItem = user.BasketItems.FirstOrDefault(bi => bi.ProductId == id);
 				if (basketItem is null) return NotFound();
@@ -185,7 +188,7 @@ namespace Pronia.Controllers
 			List<BasketCookieItemVM> basket;
 			if (User.Identity.IsAuthenticated)
 			{
-				AppUser user = await _userManager.Users.Include(u => u.BasketItems).FirstOrDefaultAsync(u => u.Id == User.FindFirst(ClaimTypes.NameIdentifier).Value);
+				AppUser user = await _userManager.Users.Include(u => u.BasketItems.Where(bi => bi.OrderId == null)).FirstOrDefaultAsync(u => u.Id == User.FindFirst(ClaimTypes.NameIdentifier).Value);
 				if (user is null) return NotFound();
 				var basketItem = user.BasketItems.FirstOrDefault(bi => bi.ProductId == id);
 				if (basketItem is not null)
@@ -220,9 +223,66 @@ namespace Pronia.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
-		public IActionResult Checkout()
+		public async Task<IActionResult> Checkout()
 		{
-			return View();
+			AppUser user = await _userManager.Users.Include(u => u.BasketItems.Where(bi => bi.OrderId == null)).ThenInclude(pi => pi.Product).FirstOrDefaultAsync(u => u.Id == User.FindFirstValue(ClaimTypes.NameIdentifier));
+			OrderVM orderVM = new OrderVM
+			{
+				BasketItems = user.BasketItems
+			};
+			return View(orderVM);
+		}
+		[HttpPost]
+		public async Task<IActionResult> Checkout(OrderVM orderVM)
+		{
+            AppUser user = await _userManager.Users.Include(u => u.BasketItems.Where(bi => bi.OrderId == null)).ThenInclude(pi => pi.Product).FirstOrDefaultAsync(u => u.Id == User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            if (!ModelState.IsValid)
+			{
+				orderVM.BasketItems = user.BasketItems;
+				return View(orderVM);
+			}
+			decimal total = 0;
+			foreach (BasketItem item in user.BasketItems)
+			{
+				item.Price = item.Product.Price;
+				total += item.Count * item.Price;
+			}
+			Order order = new Order
+			{
+				Status = null,
+				Address = orderVM.Address,
+				PurchaseAt = DateTime.UtcNow,
+				AppUserId = user.Id,
+				BasketItems = user.BasketItems,
+				TotalPrice = total
+			};
+			await _context.Orders.AddAsync(order);
+			await _context.SaveChangesAsync();
+			string body = $@"<table class=""table"">
+  <thead>
+    <tr>
+      <th scope=""col"">#</th>
+      <th scope=""col"">Name</th>
+      <th scope=""col"">Price</th>
+      <th scope=""col"">Count</th>
+    </tr>
+  </thead>
+  <tbody>";
+			foreach (BasketItem item in order.BasketItems)
+			{
+				body += $@"<tr>
+      <th scope=""row"">${item.Id}</th>
+      <td>${item.Product.Name}</td>
+      <td>${item.Price}</td>
+      <td>{item.Count}</td>
+    </tr>
+";
+			};
+			body += @"</tbody>
+</table>";
+			await _emailService.SendMailAsync(user.Email, "Your Order", body, true);
+			return RedirectToAction("Index", "Home");
 		}
 	}
 }
