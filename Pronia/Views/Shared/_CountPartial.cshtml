@@ -1,2 +1,6 @@
 ﻿@model List<BasketItemVM>
-@Model.Count
+<span class="quantity">
+    <a href="#miniCart" class="minicart-btn toolbar-btn count-holder">
+       @Model.Count
+    </a>
+</span>

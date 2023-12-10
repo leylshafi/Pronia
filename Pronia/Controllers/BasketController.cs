@@ -182,7 +182,9 @@ namespace Pronia.Controllers
 					user.BasketItems.Remove(basketItem);
 				}
 				await _context.SaveChangesAsync();
-			}
+
+              
+            }
 			else
 			{
 				if (Request.Cookies["Basket"] is not null)
@@ -195,13 +197,37 @@ namespace Pronia.Controllers
 
 						string json = JsonConvert.SerializeObject(basket);
 						Response.Cookies.Append("Basket", json);
-					}
-				}
-			}
 
 
-			return Redirect(Request.Headers["Referer"]);
-		}
+                        List<BasketItemVM> itemList = new();
+                        foreach (BasketCookieItemVM basketCookieItem in basket)
+                        {
+                            Product producte = await _context.Products.Include(p => p.ProductImages).FirstOrDefaultAsync(p => p.Id == basketCookieItem.Id);
+
+                            if (producte is not null)
+                            {
+                                string image = producte.ProductImages.FirstOrDefault(pi => pi.IsPrimary == true).Url;
+                                BasketItemVM basketItem = new()
+                                {
+                                    Id = producte.Id,
+                                    Name = producte.Name,
+                                    Image = image,
+                                    Price = producte.Price,
+                                    Count = basketCookieItem.Count,
+                                    SubTotal = producte.Price * basketCookieItem.Count,
+                                };
+                                itemList.Add(basketItem);
+                            }
+                        }
+
+                        return PartialView("_BasketItemsPartial", itemList);
+                    }
+
+                }
+
+            }
+            return Redirect(Request.Headers["Referer"]);
+        }
 
 		public async Task<IActionResult> Decrement(int id)
 		{
@@ -244,6 +270,68 @@ namespace Pronia.Controllers
 			}
 				
 			return RedirectToAction(nameof(Index));
+		}
+
+		public async Task<IActionResult> Increment(int id)
+		{
+			if (id <= 0) return BadRequest();
+			Product product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+			if (product is null) return NotFound();
+
+			if (User.Identity.IsAuthenticated)
+			{
+				AppUser user = await _userManager.Users.Include(u => u.BasketItems.Where(bi => bi.OrderId == null)).FirstOrDefaultAsync(u => u.Id == User.FindFirst(ClaimTypes.NameIdentifier).Value);
+				if (user is null) return NotFound();
+				var basketItem = user.BasketItems.FirstOrDefault(bi => bi.ProductId == id);
+				if (basketItem is null)
+				{
+					basketItem = new()
+					{
+						AppUserId = user.Id,
+						ProductId = product.Id,
+						Price = product.Price,
+						Count = 1,
+						OrderId = null
+					};
+					user.BasketItems.Add(basketItem);
+				}
+				else
+				{
+					basketItem.Count++;
+				}
+				await _context.SaveChangesAsync();
+
+				
+			}
+			else
+			{
+				if (Request.Cookies["Basket"] is not null)
+				{
+					var basket = JsonConvert.DeserializeObject<List<BasketCookieItemVM>>(Request.Cookies["Basket"]);
+					var item = basket.FirstOrDefault(b => b.Id == id);
+					if (item is not null)
+					{
+						item.Count++;
+						string json = JsonConvert.SerializeObject(basket);
+						Response.Cookies.Append("Basket", json);
+
+						Product producte = await _context.Products.Include(p => p.ProductImages).FirstOrDefaultAsync(p => p.Id == item.Id);
+						string image = producte.ProductImages.FirstOrDefault(pi => pi.IsPrimary == true).Url;
+						BasketItemVM basketItem = new()
+						{
+							Id = producte.Id,
+							Name = producte.Name,
+							Image = image,
+							Price = producte.Price,
+							Count = item.Count,
+							SubTotal = producte.Price * item.Count,
+						};
+						return PartialView("_BasketPartial", basketItem);
+					}
+					
+				}
+			}
+			return Redirect(Request.Headers["Referer"]);
 		}
 
 		public async Task<IActionResult> Checkout()

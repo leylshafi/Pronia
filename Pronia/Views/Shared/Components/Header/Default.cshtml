@@ -110,12 +110,8 @@
                             </li>
                             <li class="minicart-wrap me-3 me-lg-0">
                                 @Html.Raw(Model.Settings["ShopIcon"])
-                                <span class="quantity">
-                                <a href="#miniCart" class="minicart-btn toolbar-btn count-holder">
-                                    
-                                    @await Html.PartialAsync("_CountPartial",Model.Basket)
-                                </a>
-                                </span>
+                                @await Html.PartialAsync("_CountPartial",Model.Basket)
+                                
                             </li>
                             <li class="mobile-menu_wrap d-block d-lg-none">
                                 <a href="#mobileMenu"
@@ -424,12 +420,8 @@
                             </li>
                             <li class="minicart-wrap me-3 me-lg-0">
                                 @Html.Raw(Model.Settings["ShopIcon"])
-                                <span class="quantity">
-                                    <a href="#miniCart" class="minicart-btn toolbar-btn count-holder">
-
-                                        @await Html.PartialAsync("_CountPartial",Model.Basket)
-                                    </a>
-                                </span>
+                                @await Html.PartialAsync("_CountPartial",Model.Basket)
+                                
                             </li>
                             <li class="mobile-menu_wrap d-block d-lg-none">
                                 <a href="#mobileMenu"

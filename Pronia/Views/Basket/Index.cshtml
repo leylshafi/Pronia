@@ -74,12 +74,12 @@
 														</a>
 
 													</div>
-													<div >
-														<input style="width:30px;" value="@item.Count"
-														   type="text" />
+													<div class="basket-count">
+														@await Html.PartialAsync("_BasketPartial",item)
 													</div>
+
 													<div style="margin-left:10px;">
-														<a asp-controller="Basket" asp-action="AddBasket" asp-route-id="@item.Id" asp-route-controllerName="Basket">
+														<a asp-controller="Basket" asp-action="Increment" asp-route-id="@item.Id" class="increment">
 															<i class="fa fa-plus"></i>
 														</a>
 													</div>
