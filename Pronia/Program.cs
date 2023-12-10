@@ -4,9 +4,10 @@ using Pronia.DAL;
 using Pronia.Interfaces;
 using Pronia.Models;
 using Pronia.Services;
+using Pronia.ViewComponents;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddViewComponentsAsServices(); ;
 builder.Services.AddDbContext<AppDbContext>(op => op.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
@@ -23,6 +24,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
 builder.Services.AddSingleton<IHttpContextAccessor,HttpContextAccessor>();
 builder.Services.AddScoped<LayoutService>();
+builder.Services.AddScoped<HeaderViewComponent>();
 builder.Services.AddScoped<IEmailService,EmailService>();
 var app = builder.Build();
 app.UseRouting();

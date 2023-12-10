@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Pronia.DAL;
 using Pronia.Interfaces;
 using Pronia.Models;
+using Pronia.ViewComponents;
 using Pronia.ViewModels;
 using System.Security.Claims;
 
@@ -15,14 +16,14 @@ namespace Pronia.Controllers
 		private readonly AppDbContext _context;
 		private readonly UserManager<AppUser> _userManager;
 		private readonly IEmailService _emailService;
-		public BasketController(AppDbContext context, UserManager<AppUser> userManager, IEmailService emailService)
-		{
-			_context = context;
-			_userManager = userManager;
-			_emailService = emailService;
-		}
+        public BasketController(AppDbContext context, UserManager<AppUser> userManager, IEmailService emailService, HeaderViewComponent headerVC)
+        {
+            _context = context;
+            _userManager = userManager;
+            _emailService = emailService;
+        }
 
-		public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index()
 		{
 			List<BasketItemVM> basketVM = new();
 			if (User.Identity.IsAuthenticated)
@@ -100,8 +101,10 @@ namespace Pronia.Controllers
 					basketItem.Count++;
 				}
 				await _context.SaveChangesAsync();
-			}
-			else
+
+                return Redirect(Request.Headers["Referer"]);
+            }
+            else
 			{
 				List<BasketCookieItemVM> basket;
 				if (Request.Cookies["Basket"] is not null)
@@ -136,10 +139,30 @@ namespace Pronia.Controllers
 				string json = JsonConvert.SerializeObject(basket);
 				Response.Cookies.Append("Basket", json);
 
-			}
+				List<BasketItemVM> itemList = new();
+                foreach (BasketCookieItemVM basketCookieItem in basket)
+                {
+                    Product producte = await _context.Products.Include(p=>p.ProductImages).FirstOrDefaultAsync(p => p.Id == basketCookieItem.Id);
 
+                    if (producte is not null)
+                    {
+						string image = producte.ProductImages.FirstOrDefault(pi => pi.IsPrimary == true).Url;
+                        BasketItemVM basketItem = new()
+                        {
+                            Id = producte.Id,
+                            Name = producte.Name,
+                            Image =image ,
+                            Price = producte.Price,
+                            Count = basketCookieItem.Count,
+                            SubTotal = producte.Price * basketCookieItem.Count,
+                        };
+                        itemList.Add(basketItem);
+                    }
+                }
 
-			return Redirect(Request.Headers["Referer"]);
+                return PartialView("_BasketItemsPartial", itemList);
+
+            }
 		}
 
 		public async Task<IActionResult> RemoveBasket(int id)
