@@ -36,16 +36,16 @@ namespace Pronia.ViewComponents
 			{
 				AppUser user = await _userManager.Users.Include(u => u.BasketItems.Where(bi => bi.OrderId == null)).ThenInclude(bi => bi.Product).ThenInclude(p => p.ProductImages.Where(pi => pi.IsPrimary == true)).FirstOrDefaultAsync(u => u.Id == _accessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 				foreach (BasketItem item in user.BasketItems)
-				{
-					basketVM.Add(new BasketItemVM()
 					{
-						Name = item.Product.Name,
-						Price = item.Product.Price,
-						Count = item.Count,
-						SubTotal = item.Count * item.Product.Price,
-						Image = item.Product.ProductImages.FirstOrDefault().Url
-					});
-				}
+						basketVM.Add(new BasketItemVM()
+						{
+							Name = item.Product.Name,
+							Price = item.Product.Price,
+							Count = item.Count,
+							SubTotal = item.Count * item.Product.Price,
+							Image = item.Product.ProductImages.FirstOrDefault().Url
+						});
+					}
 			}
 			else
 			{

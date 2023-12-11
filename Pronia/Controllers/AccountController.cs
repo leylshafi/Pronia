@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Pronia.Enumerations;
+using Pronia.Interfaces;
 using Pronia.Models;
 using Pronia.ViewModels;
 
@@ -11,11 +12,13 @@ namespace Pronia.Controllers
         private readonly UserManager<AppUser> _manager;
         private readonly SignInManager<AppUser> _signIn;
         private readonly RoleManager<IdentityRole> _roleManager;
-		public AccountController(UserManager<AppUser> manager, SignInManager<AppUser> signIn, RoleManager<IdentityRole> roleManager)
+        private readonly IEmailService _emailService;
+		public AccountController(UserManager<AppUser> manager, SignInManager<AppUser> signIn, RoleManager<IdentityRole> roleManager, IEmailService emailService)
 		{
 			_manager = manager;
 			_signIn = signIn;
 			_roleManager = roleManager;
+			_emailService = emailService;
 		}
 
 		public IActionResult Register()
@@ -50,8 +53,28 @@ namespace Pronia.Controllers
                 return View();
             }
             await _manager.AddToRoleAsync(user, UserRole.Member.ToString());
-            await _signIn.SignInAsync(user,isPersistent:false);
-            return RedirectToAction("Index", "Home");
+
+            var token = await _manager.GenerateEmailConfirmationTokenAsync(user);
+            var confirmLink = Url.Action(nameof(ConfirmEmail), "Account", new { token, Email = user.Email },Request.Scheme);
+            _emailService.SendMailAsync(user.Email, "Email Confirmation", confirmLink);
+
+            return RedirectToAction(nameof(SuccessfullyRegistered),"Account");
+        }
+		public IActionResult SuccessfullyRegistered()
+		{
+			return View();
+		}
+		public async Task<IActionResult> ConfirmEmail(string token, string email)
+        {
+            AppUser user = await _manager.FindByEmailAsync(email);
+            if (user is null) return NotFound();
+            var result = await _manager.ConfirmEmailAsync(user, token);
+            if(!result.Succeeded)
+            {
+                return BadRequest();
+            }
+            await _signIn.SignInAsync(user,false);
+            return View();
         }
 
         public async Task<IActionResult> Logout()
@@ -85,6 +108,11 @@ namespace Pronia.Controllers
 				ModelState.AddModelError(String.Empty, "Too many attempts, try again later");
 				return View();
 			}
+            if (!user.EmailConfirmed)
+            {
+				ModelState.AddModelError(String.Empty, "Confirm your email to login");
+				return View();
+			}
             if(!result.Succeeded)
             {
 				ModelState.AddModelError(String.Empty, "Username, Email or Password is incorrect");
@@ -94,8 +122,8 @@ namespace Pronia.Controllers
             {
 				return RedirectToAction("Index", "Home");
 			}
-            return Redirect(returnUrl);
-        }
+			return Redirect(returnUrl);
+		}
 
         public async Task<IActionResult> CreateRole()
         {

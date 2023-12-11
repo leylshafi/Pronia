@@ -17,10 +17,12 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     options.Password.RequireUppercase= true;
     options.Password.RequireLowercase= false;
 
-    options.User.RequireUniqueEmail = false;
+    options.User.RequireUniqueEmail = true;
 
     options.Lockout.MaxFailedAccessAttempts= 3;
     options.Lockout.DefaultLockoutTimeSpan= TimeSpan.FromMinutes(3);
+
+    options.SignIn.RequireConfirmedEmail = true;
 }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
 builder.Services.AddSingleton<IHttpContextAccessor,HttpContextAccessor>();
 builder.Services.AddScoped<LayoutService>();

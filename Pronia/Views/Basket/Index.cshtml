@@ -74,12 +74,12 @@
 														</a>
 
 													</div>
-													<div class="basket-count">
-														@await Html.PartialAsync("_BasketPartial",item)
+													<div>
+														<input style="width:30px;" value="@item.Count"
+														   type="text" />
 													</div>
-
 													<div style="margin-left:10px;">
-														<a asp-controller="Basket" asp-action="Increment" asp-route-id="@item.Id" class="increment">
+														<a asp-controller="Basket" asp-action="AddBasket" asp-route-id="@item.Id" asp-route-controllerName="Basket">
 															<i class="fa fa-plus"></i>
 														</a>
 													</div>
@@ -126,7 +126,11 @@
 									<ul>
 										<li>Total <span>$@total</span></li>
 									</ul>
-									<a asp-controller="Basket" asp-action="Checkout">Proceed to checkout</a>
+									@if (User.Identity.IsAuthenticated)
+									{
+										<a asp-controller="Basket" asp-action="Checkout">Proceed to checkout</a>
+									}
+
 								</div>
 							</div>
 						</div>
