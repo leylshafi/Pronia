@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NuGet.Packaging;
 using Pronia.Areas.ProniaAdmin.ViewModels;
 using Pronia.DAL;
 using Pronia.Models;
@@ -21,15 +20,22 @@ namespace Pronia.Areas.ProniaAdmin.Controllers
 			_env = env;
 		}
 		[Authorize(Roles = "Admin,Moderator")]
-		public async Task<IActionResult> Index()
+		public async Task<IActionResult> Index(int page)
 		{
-			List<Product> Products = await _context.Products
+			double count = await _context.Products.CountAsync();
+			List<Product> Products = await _context.Products.Skip(page*3).Take(3)
 				.Include(p=>p.Category)
 				.Include(p=>p.ProductImages
 				.Where(pi=>pi.IsPrimary==true))
 				.ToListAsync();
 
-			return View(Products);
+			PaginationVM<Product> pagination = new()
+			{
+				TotalPage = Math.Ceiling(count / 3),
+				CurrentPage = page,
+				Items = Products
+			};
+			return View(pagination);
 		}
 		[Authorize(Roles = "Admin,Moderator")]
 		public async Task<IActionResult> Create()
