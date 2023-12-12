@@ -18,14 +18,6 @@ namespace Pronia.Controllers
 
         public async Task<IActionResult> Index()
         {
-   //         if (User.Identity.IsAuthenticated)
-   //         {
-			//	foreach (var cookie in Request.Cookies.Keys)
-			//	{
-			//		Response.Cookies.Delete(cookie);
-			//	}
-
-			//}
             List<Slide> Slides = await _context.Slides.OrderBy(s => s.Order).ToListAsync();
             List<Product> Products = await  _context.Products.Include(p => p.ProductImages).ToListAsync();
 
@@ -35,6 +27,11 @@ namespace Pronia.Controllers
                 Products= Products
             };
             return View(vm);
+        }
+
+        public IActionResult ErrorPage(string error)
+        {
+            return View(model:error);
         }
 
         public IActionResult About()
